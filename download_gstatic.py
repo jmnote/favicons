@@ -13,7 +13,7 @@ from download_favicon import detect_image_extension, fetch_bytes, parse_and_vali
 
 
 GSTATIC_ENDPOINT = "https://t0.gstatic.com/faviconV2"
-DEFAULT_SIZES = (16, 32, 64)
+DEFAULT_SIZES = (16, 32, 64, 128)
 
 
 def build_gstatic_url(domain: str, size: int) -> str:
@@ -64,8 +64,8 @@ def main() -> int:
     )
     parser.add_argument(
         "--sizes",
-        default="16,32,64",
-        help="Comma-separated sizes (default: 16,32,64).",
+        default="16,32,64,128",
+        help="Comma-separated sizes (default: 16,32,64,128).",
     )
     args = parser.parse_args()
 

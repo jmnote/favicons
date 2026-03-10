@@ -5,6 +5,8 @@ chatgpt.com
 cncf.io
   landscape.cncf.io
 daum.net
+  100.daum.net
+  dic.daum.net
 discord.com
 docker.com
   hub.docker.com
