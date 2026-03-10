@@ -1,6 +1,6 @@
 apple.com
 arca.live
-artifacthub.com
+artifacthub.io
 chatgpt.com
 cncf.io
   landscape.cncf.io
