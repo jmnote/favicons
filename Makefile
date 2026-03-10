@@ -1,13 +1,21 @@
-.PHONY: download gstatic png prune
-
+.PHONY: download
 download:
-	python3 download_favicon.py
+	python3 favicon_download.py --output favicon/ico
 
-gstatic:
-	python3 download_gstatic.py
-
+.PHONY: png
 png:
-	python3 generate_png.py
+	python3 favicon_png.py --input favicon/ico --output favicon/png
 
+.PHONY: prune
 prune:
-	python3 prune_assets.py
+	python3 favicon_prune.py --favicon-dir favicon/ico --png-dir favicon/png
+
+.PHONY: favicon
+favicon: download png prune
+
+.PHONY: gstatic
+gstatic:
+	python3 gstatic_download.py
+
+.PHONY: all
+all: favicon gstatic

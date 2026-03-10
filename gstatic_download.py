@@ -9,7 +9,7 @@ import argparse
 from pathlib import Path
 from urllib.parse import urlencode
 
-from download_favicon import detect_image_extension, fetch_bytes, parse_and_validate_entries
+from favicon_download import detect_image_extension, fetch_bytes, parse_and_validate_entries
 
 
 GSTATIC_ENDPOINT = "https://t0.gstatic.com/faviconV2"
