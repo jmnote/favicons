@@ -1,14 +1,12 @@
 #!/usr/bin/env python3
-"""
-Prune favicon/png files that are not listed in domains.txt.
-"""
+"""Prune favicon asset files that are not listed in domains.txt."""
 
 from __future__ import annotations
 
 import argparse
 from pathlib import Path
 
-from download_favicon import parse_and_validate_entries
+from favicon_download import parse_and_validate_entries
 
 
 def load_allowed_domains(input_path: Path) -> set[str]:
@@ -55,7 +53,10 @@ def prune_domain_files(root: Path, allowed_domains: set[str], dry_run: bool) -> 
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="Delete files from favicon/png directories if domain is not in domains.txt."
+        description=(
+            "Delete files from favicon/ico and favicon/png directories "
+            "if domain is not in domains.txt."
+        )
     )
     parser.add_argument(
         "-i",
@@ -65,13 +66,13 @@ def main() -> int:
     )
     parser.add_argument(
         "--favicon-dir",
-        default="favicon",
-        help="Favicon directory to prune (default: favicon).",
+        default="favicon/ico",
+        help="Favicon directory to prune (default: favicon/ico).",
     )
     parser.add_argument(
         "--png-dir",
-        default="png",
-        help="PNG directory to prune (default: png).",
+        default="favicon/png",
+        help="PNG directory to prune (default: favicon/png).",
     )
     parser.add_argument(
         "--dry-run",

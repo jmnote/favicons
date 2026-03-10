@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Generate PNG variants from files in the favicon directory.
+Generate PNG variants from downloaded favicon files.
 """
 
 from __future__ import annotations
@@ -117,14 +117,14 @@ def main() -> int:
     parser.add_argument(
         "-i",
         "--input",
-        default="favicon",
-        help="Directory containing source favicon files (default: favicon).",
+        default="favicon/ico",
+        help="Directory containing source favicon files (default: favicon/ico).",
     )
     parser.add_argument(
         "-o",
         "--output",
-        default="png",
-        help="Directory to write PNG variants (default: png).",
+        default="favicon/png",
+        help="Directory to write PNG variants (default: favicon/png).",
     )
     args = parser.parse_args()
 

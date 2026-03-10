@@ -19,7 +19,9 @@ from urllib.request import Request, urlopen
 USER_AGENT = "favicon-downloader/1.0"
 DEFAULT_TIMEOUT = 10
 MAX_HTML_BYTES = 1024 * 1024
-DEFAULT_OUTPUT_DIR = "favicon"
+DEFAULT_OUTPUT_DIR = "favicon/ico"
+DEFAULT_RECORD_FILE = "favicon_records.txt"
+LEGACY_RECORD_FILE = "favicon_records.tsv"
 KNOWN_EXTS = (".ico", ".png", ".svg")
 STATUS_PENDING = "pending"
 STATUS_OK = "ok"
@@ -173,7 +175,21 @@ def load_records(path: Path) -> tuple[dict[str, DownloadRecord], list[str]]:
         if not stripped or stripped.startswith("#"):
             continue
 
-        columns = raw.split("\t")
+        normalized = re.sub(r"\s+", " ", stripped.lower())
+        if (
+            normalized.startswith("domain ")
+            and " status" in normalized
+            and "source_url" in normalized
+        ):
+            continue
+
+        if "\t" in raw:
+            columns = [col.strip() for col in raw.split("\t")]
+        else:
+            columns = [col.strip() for col in re.split(r"\s{2,}", stripped, maxsplit=3)]
+        if not columns or not columns[0]:
+            continue
+
         domain_text = columns[0].strip()
         host = extract_host(domain_text)
         if not host:
@@ -183,6 +199,10 @@ def load_records(path: Path) -> tuple[dict[str, DownloadRecord], list[str]]:
         status = normalize_status(columns[1]) if len(columns) > 1 else STATUS_PENDING
         source_url = columns[2].strip() if len(columns) > 2 else ""
         extra_svg_url = columns[3].strip() if len(columns) > 3 else ""
+        if source_url == "-":
+            source_url = ""
+        if extra_svg_url == "-":
+            extra_svg_url = ""
         if status not in VALID_STATUSES:
             errors.append(
                 f"records line {line_no}: invalid status '{status}'. "
@@ -196,11 +216,21 @@ def load_records(path: Path) -> tuple[dict[str, DownloadRecord], list[str]]:
     return records, errors
 
 
-def format_record_line(domain: str, record: DownloadRecord) -> str:
-    fields = [domain, record.status, record.source_url]
-    if record.extra_svg_url:
-        fields.append(record.extra_svg_url)
-    return "\t".join(fields)
+def format_record_line(
+    domain: str,
+    record: DownloadRecord,
+    domain_width: int,
+    status_width: int,
+    include_extra_svg: bool,
+) -> str:
+    fields = [
+        domain.ljust(domain_width),
+        record.status.ljust(status_width),
+        record.source_url or "-",
+    ]
+    if include_extra_svg:
+        fields.append(record.extra_svg_url or "-")
+    return "  ".join(fields)
 
 
 def save_records(path: Path, records: dict[str, DownloadRecord], domain_order: list[str]) -> None:
@@ -217,9 +247,29 @@ def save_records(path: Path, records: dict[str, DownloadRecord], domain_order: l
             ordered_domains.append(domain)
             seen.add(domain)
 
-    lines = ["# domain\tstatus\tsource_url\textra_svg_url"]
+    include_extra_svg = any(records[domain].extra_svg_url for domain in ordered_domains)
+    domain_width = max([len("domain"), *[len(domain) for domain in ordered_domains]])
+    status_width = max([len("status"), *[len(records[domain].status) for domain in ordered_domains]])
+
+    header_fields = [
+        "domain".ljust(domain_width),
+        "status".ljust(status_width),
+        "source_url",
+    ]
+    if include_extra_svg:
+        header_fields.append("extra_svg_url")
+
+    lines = ["  ".join(header_fields)]
     for domain in ordered_domains:
-        lines.append(format_record_line(domain, records[domain]))
+        lines.append(
+            format_record_line(
+                domain,
+                records[domain],
+                domain_width=domain_width,
+                status_width=status_width,
+                include_extra_svg=include_extra_svg,
+            )
+        )
     path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
 
 
@@ -513,8 +563,8 @@ def main() -> int:
     parser.add_argument(
         "-r",
         "--record",
-        default="favicon_records.tsv",
-        help="Path to TSV record file (default: favicon_records.tsv).",
+        default=DEFAULT_RECORD_FILE,
+        help=f"Path to record file (default: {DEFAULT_RECORD_FILE}).",
     )
     args = parser.parse_args()
 
@@ -537,9 +587,23 @@ def main() -> int:
         return 1
 
     record_path = Path(args.record)
-    records, record_errors = load_records(record_path)
+    record_source_path = record_path
+    default_record_requested = args.record == DEFAULT_RECORD_FILE
+    legacy_record_path = Path(LEGACY_RECORD_FILE)
+    if (
+        default_record_requested
+        and not record_path.exists()
+        and legacy_record_path.exists()
+    ):
+        record_source_path = legacy_record_path
+        print(
+            f"[info] Using legacy record file '{legacy_record_path}' "
+            f"and migrating to '{record_path}'."
+        )
+
+    records, record_errors = load_records(record_source_path)
     if record_errors:
-        print(f"Record file validation failed: {record_path}")
+        print(f"Record file validation failed: {record_source_path}")
         for err in record_errors:
             print(f"  - {err}")
         return 1
@@ -558,12 +622,15 @@ def main() -> int:
             existing_paths = existing_icon_paths(output_dir, label)
             if existing_paths:
                 saved_paths.setdefault(domain, {}).update(existing_paths)
+                print(
+                    f"[skip] {domain} -> status={record.status} in {record_source_path.name}"
+                )
+                records[domain] = record
+                success += 1
+                continue
             print(
-                f"[skip] {domain} -> status={record.status} in {record_path.name}"
+                f"[redo] {domain} -> status={record.status}, but no file in {output_dir}"
             )
-            records[domain] = record
-            success += 1
-            continue
 
         record.extra_svg_url = ""
         result = download_favicon_for_entry(domain)
