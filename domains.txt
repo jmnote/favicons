@@ -1,0 +1,49 @@
+apple.com
+arca.live
+artifacthub.com
+chatgpt.com
+cncf.io
+  devstats.cncf.io
+  landscape.cncf.io
+daum.net
+discord.com
+docker.com
+  hub.docker.com
+facebook.com
+github.com
+gitlab.com
+go.dev
+google.com
+  adsense.google.com
+  analytics.google.com
+  chromewebstore.google.com
+  cloud.google.com
+  play.google.com
+instagram.com
+kubernetes.io
+line.me
+linkedin.com
+map.kakao.com
+mediawiki.org
+microsoft.com
+  apps.microsoft.com
+  copilot.microsoft.com
+namu.news
+namu.wiki
+naver.com
+  dict.naver.com
+  map.naver.com
+  pay.naver.com
+  terms.naver.com
+openai.com
+samsung.com
+steampowered.com
+tiktok.com
+twitch.tv
+wikimedia.org
+  commons.wikimedia.org
+wikipedia.org
+wiktionary.org
+x.com
+youtube.com
+zetawiki.com
