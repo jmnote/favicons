@@ -3,7 +3,6 @@ arca.live
 artifacthub.com
 chatgpt.com
 cncf.io
-  devstats.cncf.io
   landscape.cncf.io
 daum.net
 discord.com
